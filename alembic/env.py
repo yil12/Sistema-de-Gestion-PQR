@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
 from app.core.database import Base
+from app.models import Rol, Agente, Solicitante, PQR, Seguimiento
 
 
 config = context.config
@@ -13,7 +14,6 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 
-# Por ahora no tenemos modelos SQLAlchemy.
 target_metadata =  Base.metadata
 
 
