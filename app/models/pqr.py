@@ -11,6 +11,12 @@ class PQR(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
+    radicado: Mapped[str | None] = mapped_column(
+    String(30),
+    unique=True,
+    nullable=True,
+    )
+
     solicitante_id: Mapped[int] = mapped_column(
         ForeignKey("solicitante.id"),
         nullable=False,

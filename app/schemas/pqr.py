@@ -15,6 +15,7 @@ class PQRCreate(BaseModel):
 
 class PQRResponse(BaseModel):
     id: int
+    radicado: str
     solicitante_id: int
     agente_asignado_id: int | None
     tipo: str
