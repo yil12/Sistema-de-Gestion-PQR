@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from app.api.routes.pqr import router as pqr_router
+
 
 app = FastAPI(
     title="Sistema PQR API",
@@ -13,6 +15,7 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
+app.include_router(pqr_router)
 
 @app.get(
     "/health",
