@@ -8,6 +8,8 @@ from app.api.routes.seguimiento import router as seguimiento_router
 from app.api.routes.asignacion import router as asignacion_router
 from app.api.routes.escalamiento import router as escalamiento_router
 from app.api.routes.resolucion import router as resolucion_router
+from app.api.routes.solicitante import router as solicitante_router
+
 
 
 
@@ -39,6 +41,8 @@ app.include_router(seguimiento_router)
 app.include_router(asignacion_router)
 app.include_router(escalamiento_router)
 app.include_router(resolucion_router)
+app.include_router(solicitante_router)
+
 
 
 
