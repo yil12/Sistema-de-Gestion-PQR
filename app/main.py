@@ -4,6 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from app.core.exceptions import BusinessException, business_exception_handler, validation_exception_handler
 
 from app.api.routes.pqr import router as pqr_router
+from app.api.routes.seguimiento import router as seguimiento_router
 
 
 app = FastAPI(
@@ -29,6 +30,8 @@ app.add_exception_handler(
 )
 
 app.include_router(pqr_router)
+app.include_router(seguimiento_router)
+
 
 @app.get(
     "/health",

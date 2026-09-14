@@ -13,6 +13,7 @@ from app.repositories.pqr_repository import (
     get_pqr_by_id,
     get_pqr_by_radicado,
     get_pqrs,
+    update_pqr_estado,
 )
 
 from app.core.exceptions import BusinessException
@@ -103,3 +104,33 @@ def get_pqrs_service(
         page=page,
         limit=limit,
     )
+
+
+def update_pqr_estado_service(
+    db: Session,
+    pqr_id: int,
+    estado: str,
+) -> PQR:
+    pqr = get_pqr_by_id(db, pqr_id)
+
+    if pqr is None:
+        raise BusinessException(
+            status_code=404,
+            detail="La PQR indicada no existe.",
+        )
+
+    try:
+        pqr = update_pqr_estado(
+            db=db,
+            pqr=pqr,
+            estado=estado,
+        )
+
+        db.commit()
+        db.refresh(pqr)
+
+        return pqr
+
+    except Exception:
+        db.rollback()
+        raise

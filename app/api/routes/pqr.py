@@ -9,12 +9,14 @@ from app.services.pqr_service import (
     get_pqr_by_id_service,
     get_pqr_by_radicado_service,
     get_pqrs_service,
+    update_pqr_estado_service,
 )
 
 from app.schemas.pqr import (
     PQRCreate,
     PQRResponse,
     PQRFilterParams,
+    PQRUpdateEstado,
 )
 
 router = APIRouter(
@@ -109,5 +111,29 @@ def get_pqr(
     return ApiResponse(
         exito=True,
         mensaje="PQR consultada correctamente.",
+        data=pqr,
+    )
+
+
+@router.patch(
+    "/{pqr_id}/estado",
+    response_model=ApiResponse[PQRResponse],
+    status_code=200,
+    summary="Actualizar estado de una PQR",
+)
+def actualizar_estado_pqr(
+    pqr_id: int,
+    data: PQRUpdateEstado,
+    db: Session = Depends(get_db),
+):
+    pqr = update_pqr_estado_service(
+        db=db,
+        pqr_id=pqr_id,
+        estado=data.estado,
+    )
+
+    return ApiResponse(
+        exito=True,
+        mensaje="Estado de la PQR actualizado correctamente.",
         data=pqr,
     )

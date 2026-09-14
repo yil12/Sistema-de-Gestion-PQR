@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from app.models.pqr import PQR
+from app.models.seguimiento import Seguimiento
 
 
 def create_pqr(db: Session, pqr: PQR) -> PQR:
@@ -60,3 +62,16 @@ def get_pqrs(
         .limit(limit)
         .all()
     )
+
+def update_pqr_estado(
+    db: Session,
+    pqr: PQR,
+    estado: str,
+) -> PQR:
+    pqr.estado = estado
+    pqr.updated_at = datetime.utcnow()
+
+    db.flush()
+    db.refresh(pqr)
+
+    return pqr
