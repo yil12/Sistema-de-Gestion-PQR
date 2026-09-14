@@ -6,6 +6,7 @@ from app.core.exceptions import BusinessException, business_exception_handler, v
 from app.api.routes.pqr import router as pqr_router
 from app.api.routes.seguimiento import router as seguimiento_router
 from app.api.routes.asignacion import router as asignacion_router
+from app.api.routes.escalamiento import router as escalamiento_router
 
 
 
@@ -34,6 +35,7 @@ app.add_exception_handler(
 app.include_router(pqr_router)
 app.include_router(seguimiento_router)
 app.include_router(asignacion_router)
+app.include_router(escalamiento_router)
 
 
 @app.get(

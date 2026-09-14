@@ -24,3 +24,13 @@ def get_seguimientos_by_pqr(
         .order_by(Seguimiento.fecha_registro.asc())
         .all()
     )
+
+def create_escalamiento(
+    db: Session,
+    seguimiento: Seguimiento,
+) -> Seguimiento:
+    db.add(seguimiento)
+    db.flush()
+    db.refresh(seguimiento)
+
+    return seguimiento

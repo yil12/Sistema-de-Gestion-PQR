@@ -166,6 +166,28 @@ class SeguimientoCreate(BaseModel):
 
         return value
 
+class PQREscalate(BaseModel):
+    destino: str = Field(
+        min_length=3,
+        max_length=100,
+    )
+
+    descripcion: str = Field(
+        min_length=5,
+    )
+
+    @field_validator("destino", "descripcion")
+    @classmethod
+    def validar_texto(cls, value: str) -> str:
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "El campo no puede estar vacío."
+            )
+
+        return value
+    
 class PQRResponse(BaseModel):
     id: int
     radicado: str
