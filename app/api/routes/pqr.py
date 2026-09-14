@@ -2,14 +2,20 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.pqr import PQRCreate, PQRResponse
+
 from app.schemas.response import ApiResponse
 from app.services.pqr_service import (
     register_pqr,
     get_pqr_by_id_service,
     get_pqr_by_radicado_service,
+    get_pqrs_service,
 )
 
+from app.schemas.pqr import (
+    PQRCreate,
+    PQRResponse,
+    PQRFilterParams,
+)
 
 router = APIRouter(
     prefix="/api/pqr",
@@ -33,6 +39,33 @@ def create_pqr(
         exito=True,
         mensaje="PQR registrada correctamente.",
         data=pqr,
+    )
+
+
+@router.get(
+    "",
+    response_model=ApiResponse[list[PQRResponse]],
+    status_code=200,
+    summary="Consultar y filtrar PQR",
+)
+def listar_pqrs(
+    filtros: PQRFilterParams = Depends(),
+    db: Session = Depends(get_db),
+):
+    pqrs = get_pqrs_service(
+        db=db,
+        estado=filtros.estado,
+        tipo=filtros.tipo,
+        prioridad=filtros.prioridad,
+        categoria=filtros.categoria,
+        page=filtros.page,
+        limit=filtros.limit,
+    )
+
+    return ApiResponse(
+        exito=True,
+        mensaje="PQR consultadas correctamente.",
+        data=pqrs,
     )
 
 

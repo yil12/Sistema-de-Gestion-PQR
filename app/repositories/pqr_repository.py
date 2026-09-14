@@ -27,3 +27,36 @@ def get_pqr_by_radicado(
         .filter(PQR.radicado == radicado)
         .first()
     )
+
+
+def get_pqrs(
+    db: Session,
+    estado: str | None = None,
+    tipo: str | None = None,
+    prioridad: str | None = None,
+    categoria: str | None = None,
+    page: int = 1,
+    limit: int = 10,
+) -> list[PQR]:
+    query = db.query(PQR)
+
+    if estado is not None:
+        query = query.filter(PQR.estado == estado)
+
+    if tipo is not None:
+        query = query.filter(PQR.tipo == tipo)
+
+    if prioridad is not None:
+        query = query.filter(PQR.prioridad == prioridad)
+
+    if categoria is not None:
+        query = query.filter(PQR.categoria == categoria)
+
+    offset = (page - 1) * limit
+
+    return (
+        query
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )

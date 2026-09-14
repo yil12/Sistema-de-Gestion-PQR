@@ -68,6 +68,42 @@ class PQRCreate(BaseModel):
         return value
 
 
+class PQRFilterParams(BaseModel):
+    estado: str | None = None
+    tipo: TipoPQR | None = None
+    prioridad: PrioridadPQR | None = None
+    categoria: str | None = Field(
+        default=None,
+        max_length=100,
+    )
+
+    page: int = Field(
+        default=1,
+        ge=1,
+    )
+
+    limit: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+    )
+
+    @field_validator("estado", "categoria")
+    @classmethod
+    def validar_filtros_texto(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        value = value.strip()
+
+        if not value:
+            return None
+
+        return value
+
 class PQRResponse(BaseModel):
     id: int
     radicado: str

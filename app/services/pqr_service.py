@@ -12,6 +12,7 @@ from app.repositories.pqr_repository import (
     create_pqr,
     get_pqr_by_id,
     get_pqr_by_radicado,
+    get_pqrs,
 )
 
 from app.core.exceptions import BusinessException
@@ -82,3 +83,23 @@ def get_pqr_by_radicado_service(
         )
 
     return pqr
+
+
+def get_pqrs_service(
+    db: Session,
+    estado: str | None = None,
+    tipo: str | None = None,
+    prioridad: str | None = None,
+    categoria: str | None = None,
+    page: int = 1,
+    limit: int = 10,
+) -> list[PQR]:
+    return get_pqrs(
+        db=db,
+        estado=estado,
+        tipo=tipo,
+        prioridad=prioridad,
+        categoria=categoria,
+        page=page,
+        limit=limit,
+    )
