@@ -5,23 +5,45 @@ from app.repositories.pqr_repository import create_pqr
 from app.schemas.pqr import PQRCreate
 from app.utils.radicado import generar_radicado
 
+from app.repositories.solicitante_repository import (
+    get_solicitante_by_id,
+)
+from app.core.exceptions import BusinessException
+
 
 def register_pqr(db: Session, data: PQRCreate) -> PQR:
-    pqr = PQR(
-        solicitante_id=data.solicitante_id,
-        tipo=data.tipo,
-        titulo=data.titulo,
-        descripcion=data.descripcion,
-        categoria=data.categoria,
-        prioridad=data.prioridad,
-        canal=data.canal,
+    solicitante = get_solicitante_by_id(
+        db,
+        data.solicitante_id,
     )
 
-    pqr = create_pqr(db, pqr)
+    if solicitante is None:
+        raise BusinessException(
+            status_code=404,
+            detail="El solicitante indicado no existe.",
+        )
 
-    pqr.radicado = generar_radicado(pqr.id)
+    try:
+        pqr = PQR(
+            solicitante_id=data.solicitante_id,
+            tipo=data.tipo,
+            titulo=data.titulo,
+            descripcion=data.descripcion,
+            categoria=data.categoria,
+            prioridad=data.prioridad,
+            canal=data.canal,
+        )
 
-    db.commit()
-    db.refresh(pqr)
+        pqr = create_pqr(db, pqr)
 
-    return pqr
+        pqr.radicado = generar_radicado(pqr.id)
+
+        db.commit()
+        db.refresh(pqr)
+
+        return pqr
+
+    except Exception:
+        db.rollback()
+        raise
+

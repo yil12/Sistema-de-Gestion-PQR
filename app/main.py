@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 
+from fastapi.exceptions import RequestValidationError
+from app.core.exceptions import BusinessException, business_exception_handler, validation_exception_handler
+
 from app.api.routes.pqr import router as pqr_router
 
 
@@ -13,6 +16,16 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+)
+
+app.add_exception_handler(
+    RequestValidationError,
+    validation_exception_handler,
+)
+
+app.add_exception_handler(
+    BusinessException,
+    business_exception_handler,
 )
 
 app.include_router(pqr_router)

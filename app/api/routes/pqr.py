@@ -3,11 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
 from app.schemas.pqr import PQRCreate, PQRResponse
+from app.schemas.response import ApiResponse
 from app.services.pqr_service import register_pqr
 
 
 router = APIRouter(
-    prefix="/pqrs",
+    prefix="/api/pqr",
     tags=["PQR"],
 )
 
@@ -23,12 +24,21 @@ def get_db():
 
 @router.post(
     "",
-    response_model=PQRResponse,
+    response_model=ApiResponse[PQRResponse],
     status_code=201,
     summary="Registrar una PQR",
 )
+
+
+
 def create_pqr(
     data: PQRCreate,
     db: Session = Depends(get_db),
 ):
-    return register_pqr(db, data)
+    pqr = register_pqr(db, data)
+
+    return ApiResponse(
+        exito=True,
+        mensaje="PQR registrada correctamente.",
+        data=pqr,
+    )
