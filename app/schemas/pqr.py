@@ -23,6 +23,7 @@ class CanalPQR(str, Enum):
 
 
 class TipoAccionSeguimiento(str, Enum):
+    CREADA = "creada"
     COMENTARIO = "comentario"
     RESPUESTA = "respuesta"
     ESCALAMIENTO = "escalamiento"
@@ -193,4 +194,5 @@ class SeguimientoResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
+class PQRAssignAgent(BaseModel):
+    agente_id: int = Field(gt=0)

@@ -75,3 +75,17 @@ def update_pqr_estado(
     db.refresh(pqr)
 
     return pqr
+
+
+def assign_pqr_agent(
+    db: Session,
+    pqr: PQR,
+    agente_id: int,
+) -> PQR:
+    pqr.agente_asignado_id = agente_id
+    pqr.updated_at = datetime.utcnow()
+
+    db.flush()
+    db.refresh(pqr)
+
+    return pqr
