@@ -137,11 +137,46 @@ def update_pqr_estado_service(
             detail="La PQR indicada no existe.",
         )
 
+    if estado == "resuelta":
+        raise BusinessException(
+            status_code=400,
+            detail=(
+                "La PQR debe resolverse mediante el registro "
+                "de una respuesta final."
+            ),
+        )
+
+    if estado == "cerrada" and pqr.estado != "resuelta":
+        raise BusinessException(
+            status_code=400,
+            detail=(
+                "La PQR solo puede cerrarse cuando "
+                "se encuentra en estado resuelta."
+            ),
+        )
+
     try:
+        estado_anterior = pqr.estado
+
         pqr = update_pqr_estado(
             db=db,
             pqr=pqr,
             estado=estado,
+        )
+
+        seguimiento = Seguimiento(
+            pqr_id=pqr_id,
+            agente_id=None,
+            tipo_accion="cambio_estado",
+            descripcion=(
+                f"Estado cambiado de "
+                f"{estado_anterior} a {estado}."
+            ),
+        )
+
+        create_seguimiento(
+            db=db,
+            seguimiento=seguimiento,
         )
 
         db.commit()
@@ -198,6 +233,55 @@ def assign_pqr_agent_service(
         create_seguimiento(
             db=db,
             seguimiento=seguimiento,
+        )
+
+        db.commit()
+        db.refresh(pqr)
+
+        return pqr
+
+    except Exception:
+        db.rollback()
+        raise
+
+
+def resolve_pqr_service(
+    db: Session,
+    pqr_id: int,
+    agente_id: int | None,
+    respuesta: str,
+) -> PQR:
+    pqr = get_pqr_by_id(db, pqr_id)
+
+    if pqr is None:
+        raise BusinessException(
+            status_code=404,
+            detail="La PQR indicada no existe.",
+        )
+
+    if pqr.estado == "cerrada":
+        raise BusinessException(
+            status_code=400,
+            detail="La PQR ya se encuentra cerrada.",
+        )
+
+    try:
+        seguimiento = Seguimiento(
+            pqr_id=pqr_id,
+            agente_id=agente_id,
+            tipo_accion="respuesta",
+            descripcion=respuesta,
+        )
+
+        create_seguimiento(
+            db=db,
+            seguimiento=seguimiento,
+        )
+
+        pqr = update_pqr_estado(
+            db=db,
+            pqr=pqr,
+            estado="resuelta",
         )
 
         db.commit()

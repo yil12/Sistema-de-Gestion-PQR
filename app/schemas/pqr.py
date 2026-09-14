@@ -218,3 +218,22 @@ class SeguimientoResponse(BaseModel):
 
 class PQRAssignAgent(BaseModel):
     agente_id: int = Field(gt=0)
+
+
+class PQRResolve(BaseModel):
+    respuesta: str = Field(
+        min_length=10,
+        max_length=2000,
+    )
+
+    @field_validator("respuesta")
+    @classmethod
+    def validar_respuesta(cls, value: str) -> str:
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "La respuesta no puede estar vacía."
+            )
+
+        return value
