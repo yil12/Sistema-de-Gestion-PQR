@@ -73,13 +73,13 @@ class PQRResponse(BaseModel):
     radicado: str
     solicitante_id: int
     agente_asignado_id: int | None
-    tipo: str
+    tipo: TipoPQR
     titulo: str
     descripcion: str
     categoria: str | None
-    prioridad: str
+    prioridad: PrioridadPQR
     estado: str
-    canal: str
+    canal: CanalPQR
     created_at: datetime
     updated_at: datetime | None
 
