@@ -1,11 +1,11 @@
-from sqlalchemy import String
+from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
 
-class Rol(Base):
-    __tablename__ = "rol"
+class Permiso(Base):
+    __tablename__ = "permiso"
 
     id: Mapped[int] = mapped_column(
         primary_key=True,
@@ -13,17 +13,17 @@ class Rol(Base):
     )
 
     nombre: Mapped[str] = mapped_column(
-        String(50),
+        String(100),
         unique=True,
         nullable=False,
     )
 
-    agentes = relationship(
-        "Agente",
-        back_populates="rol",
+    descripcion: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
 
-    permisos = relationship(
+    roles = relationship(
         "RolPermiso",
-        back_populates="rol",
+        back_populates="permiso",
     )

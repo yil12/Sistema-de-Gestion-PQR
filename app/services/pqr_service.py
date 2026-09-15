@@ -2,11 +2,14 @@ from sqlalchemy.orm import Session
 
 from app.models.pqr import PQR
 from app.models.seguimiento import Seguimiento
+from app.models.solicitante import Solicitante
 from app.schemas.pqr import PQRCreate
 from app.utils.radicado import generar_radicado
 
 from app.repositories.solicitante_repository import (
-    get_solicitante_by_id,
+    create_solicitante,
+    get_solicitante_by_documento,
+    get_solicitante_by_email,
 )
 
 from app.repositories.seguimiento_repository import (
@@ -26,20 +29,33 @@ from app.core.exceptions import BusinessException
 
 
 def register_pqr(db: Session, data: PQRCreate) -> PQR:
-    solicitante = get_solicitante_by_id(
-        db,
-        data.solicitante_id,
-    )
-
-    if solicitante is None:
-        raise BusinessException(
-            status_code=404,
-            detail="El solicitante indicado no existe.",
+    try:
+        solicitante = get_solicitante_by_documento(
+            db=db,
+            numero_documento=data.solicitante.numero_documento,
         )
 
-    try:
+        if solicitante is None:
+            solicitante = get_solicitante_by_email(
+                db=db,
+                email=data.solicitante.email,
+            )
+
+        if solicitante is None:
+            solicitante = create_solicitante(
+                db=db,
+                solicitante=Solicitante(
+                    nombre=data.solicitante.nombre,
+                    apellido=data.solicitante.apellido,
+                    tipo_documento=data.solicitante.tipo_documento,
+                    numero_documento=data.solicitante.numero_documento,
+                    email=data.solicitante.email,
+                    telefono=data.solicitante.telefono,
+                ),
+            )
+
         pqr = PQR(
-            solicitante_id=data.solicitante_id,
+            solicitante_id=solicitante.id,
             tipo=data.tipo,
             titulo=data.titulo,
             descripcion=data.descripcion,

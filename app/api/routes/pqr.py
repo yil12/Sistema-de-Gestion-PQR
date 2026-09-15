@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.api.dependencies.permission import require_permission
 
 from app.schemas.response import ApiResponse
 from app.services.pqr_service import (
@@ -53,6 +54,7 @@ def create_pqr(
 def listar_pqrs(
     filtros: PQRFilterParams = Depends(),
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("pqr.consultar")),
 ):
     pqrs = get_pqrs_service(
         db=db,
@@ -102,6 +104,7 @@ def buscar_pqr_por_radicado(
 def get_pqr(
     pqr_id: int,
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("pqr.consultar")),
 ):
     pqr = get_pqr_by_id_service(
         db,
@@ -125,6 +128,7 @@ def actualizar_estado_pqr(
     pqr_id: int,
     data: PQRUpdateEstado,
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("pqr.cambiar_estado")),
 ):
     pqr = update_pqr_estado_service(
         db=db,

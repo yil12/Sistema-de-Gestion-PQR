@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.api.dependencies.permission import require_permission
 from app.schemas.pqr import PQRAssignAgent, PQRResponse
 from app.schemas.response import ApiResponse
 from app.services.pqr_service import assign_pqr_agent_service
@@ -23,6 +24,7 @@ def asignar_pqr(
     pqr_id: int,
     data: PQRAssignAgent,
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("pqr.asignar")),
 ):
     pqr = assign_pqr_agent_service(
         db=db,

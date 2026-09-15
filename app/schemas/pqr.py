@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from app.schemas.solicitante import SolicitanteCreate
 
 class TipoPQR(str, Enum):
     PETICION = "peticion"
@@ -32,26 +33,12 @@ class TipoAccionSeguimiento(str, Enum):
     REASIGNACION = "reasignacion"
 
 class PQRCreate(BaseModel):
-    solicitante_id: int
-
+    solicitante: SolicitanteCreate
     tipo: TipoPQR
-
-    titulo: str = Field(
-        min_length=5,
-        max_length=200,
-    )
-
-    descripcion: str = Field(
-        min_length=10,
-    )
-
-    categoria: str | None = Field(
-        default=None,
-        max_length=100,
-    )
-
+    titulo: str = Field(min_length=5, max_length=200)
+    descripcion: str = Field(min_length=10)
+    categoria: str | None = Field(default=None, max_length=100)
     prioridad: PrioridadPQR
-
     canal: CanalPQR
 
     @field_validator("titulo", "descripcion")

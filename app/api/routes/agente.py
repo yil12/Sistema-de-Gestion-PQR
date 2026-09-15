@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from app.api.dependencies.permission import require_permission
 from app.core.database import get_db
 from app.schemas.agente import AgenteCreate, AgenteResponse
 from app.services.agente_service import (
@@ -23,6 +24,7 @@ router = APIRouter(
 def crear_agente(
     data: AgenteCreate,
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("usuario.crear")),
 ):
     return register_agente(
         db=db,
@@ -36,6 +38,7 @@ def crear_agente(
 )
 def listar_agentes(
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("usuario.consultar")),
 ):
     return get_agentes_service(db)
 
@@ -47,8 +50,10 @@ def listar_agentes(
 def obtener_agente(
     agente_id: int,
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("usuario.consultar")),
 ):
     return get_agente_by_id_service(
         db=db,
         agente_id=agente_id,
     )
+    

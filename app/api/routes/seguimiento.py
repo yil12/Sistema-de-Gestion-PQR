@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.api.dependencies.permission import require_permission
 from app.schemas.pqr import (
     SeguimientoCreate,
     SeguimientoResponse,
@@ -27,6 +28,7 @@ def registrar_seguimiento(
     pqr_id: int,
     data: SeguimientoCreate,
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("pqr.seguimiento")),
 ):
     seguimiento = create_seguimiento_service(
         db=db,
@@ -52,6 +54,7 @@ def registrar_seguimiento(
 def listar_seguimientos(
     pqr_id: int,
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("pqr.consultar")),
 ):
     seguimientos = get_seguimientos_service(
         db=db,

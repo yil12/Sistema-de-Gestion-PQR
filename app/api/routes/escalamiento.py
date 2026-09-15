@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.api.dependencies.permission import require_permission
 from app.schemas.pqr import (
     PQREscalate,
     SeguimientoResponse,
@@ -27,6 +28,7 @@ def escalar_pqr(
     pqr_id: int,
     data: PQREscalate,
     db: Session = Depends(get_db),
+    agente=Depends(require_permission("pqr.escalar")),
 ):
     seguimiento = create_escalamiento_service(
         db=db,
