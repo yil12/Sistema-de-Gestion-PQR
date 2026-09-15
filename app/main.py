@@ -10,6 +10,7 @@ from app.api.routes.escalamiento import router as escalamiento_router
 from app.api.routes.resolucion import router as resolucion_router
 from app.api.routes.solicitante import router as solicitante_router
 from app.api.routes.agente import router as agente_router
+from app.api.routes.auth import router as auth_router
 
 
 
@@ -44,6 +45,7 @@ app.include_router(escalamiento_router)
 app.include_router(resolucion_router)
 app.include_router(solicitante_router)
 app.include_router(agente_router)
+app.include_router(auth_router)
 
 
 
