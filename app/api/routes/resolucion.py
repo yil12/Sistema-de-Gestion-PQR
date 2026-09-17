@@ -9,8 +9,8 @@ from app.services.pqr_service import resolve_pqr_service
 
 
 router = APIRouter(
-    prefix="/api/pqr/{pqr_id}/resolucion",
-    tags=["Resolución"],
+    prefix="/api/pqr/{pqr_id}/respuesta",
+    tags=["Respuesta"],
 )
 
 

@@ -13,7 +13,7 @@ from app.services.seguimiento_service import (
 )
 
 router = APIRouter(
-    prefix="/api/pqr/{pqr_id}/escalamiento",
+    prefix="/api/pqr/{pqr_id}/escalar",
     tags=["Escalamiento"],
 )
 

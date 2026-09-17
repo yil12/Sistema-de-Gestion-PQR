@@ -16,13 +16,20 @@ from app.repositories.seguimiento_repository import (
     create_seguimiento,
 )
 
+from app.repositories.agente_repository import (
+    get_agente_by_id,
+)
+
 from app.repositories.pqr_repository import (
     create_pqr,
     get_pqr_by_id,
     get_pqr_by_radicado,
     get_pqrs,
+    get_pqr_statistics,
     update_pqr_estado,
     assign_pqr_agent,
+    get_pqr_detail_by_id,
+    get_pqr_public_by_radicado,
 )
 
 from app.core.exceptions import BusinessException
@@ -94,7 +101,7 @@ def get_pqr_by_id_service(
     db: Session,
     pqr_id: int,
 ) -> PQR:
-    pqr = get_pqr_by_id(db, pqr_id)
+    pqr = get_pqr_detail_by_id(db, pqr_id)
 
     if pqr is None:
         raise BusinessException(
@@ -118,6 +125,40 @@ def get_pqr_by_radicado_service(
         )
 
     return pqr
+
+
+def get_pqr_public_by_radicado_service(
+    db: Session,
+    radicado: str,
+) -> PQR:
+    pqr = get_pqr_public_by_radicado(db, radicado)
+
+    if pqr is None:
+        raise BusinessException(
+            status_code=404,
+            detail="No se encontró una PQR con el número de radicado indicado.",
+        )
+
+    return {
+        "radicado": pqr.radicado, 
+        "tipo": pqr.tipo, 
+        "titulo": pqr.titulo, 
+        "descripcion": pqr.descripcion, 
+        "categoria": pqr.categoria,
+        "prioridad": pqr.prioridad, 
+        "estado": pqr.estado, 
+        "created_at": pqr.created_at, 
+        "updated_at": pqr.updated_at, 
+        "historial": 
+            [ { 
+                "id": seguimiento.id, 
+               "tipo_accion": seguimiento.tipo_accion, 
+               "descripcion": seguimiento.descripcion, 
+               "fecha_registro": seguimiento.fecha_registro, 
+               } 
+               for seguimiento in pqr.seguimientos 
+            ],
+    }
 
 
 def get_pqrs_service(
@@ -227,16 +268,20 @@ def assign_pqr_agent_service(
             agente_id=agente_id,
         )
 
+        agente_nuevo = get_agente_by_id(db, agente_id)
+        nombre_agente_nuevo = agente_nuevo.nombre if agente_nuevo else f"#{agente_id}"
+
         if agente_anterior_id is None:
             tipo_accion = "asignacion"
-            descripcion = (
-                f"PQR asignada al agente {agente_id}."
-            )
+            descripcion = f"PQR asignada al agente {nombre_agente_nuevo}."
         else:
+            agente_anterior = get_agente_by_id(db, agente_anterior_id)
+            nombre_agente_anterior = agente_anterior.nombre if agente_anterior else f"#{agente_anterior_id}"
+
             tipo_accion = "reasignacion"
             descripcion = (
                 f"PQR reasignada del agente "
-                f"{agente_anterior_id} al agente {agente_id}."
+                f"{nombre_agente_anterior} al agente {nombre_agente_nuevo}."
             )
 
         seguimiento = Seguimiento(
@@ -308,3 +353,8 @@ def resolve_pqr_service(
     except Exception:
         db.rollback()
         raise
+
+def get_pqr_statistics_service(
+    db: Session,
+) -> dict:
+    return get_pqr_statistics(db)

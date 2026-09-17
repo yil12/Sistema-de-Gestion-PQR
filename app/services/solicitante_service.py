@@ -7,6 +7,7 @@ from app.repositories.solicitante_repository import (
     get_solicitante_by_documento,
     get_solicitante_by_email,
     get_solicitante_by_id,
+    get_solicitante,
 )
 from app.schemas.solicitante import SolicitanteCreate
 
@@ -118,3 +119,10 @@ def get_solicitante_by_documento_service(
         )
 
     return solicitante
+
+
+def get_solicitante_service(
+    db: Session,
+) -> list[Solicitante]:
+
+    return get_solicitante(db)

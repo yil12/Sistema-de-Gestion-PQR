@@ -11,6 +11,8 @@ from app.services.pqr_service import (
     get_pqr_by_radicado_service,
     get_pqrs_service,
     update_pqr_estado_service,
+    get_pqr_statistics_service,
+    get_pqr_public_by_radicado_service,
 )
 
 from app.schemas.pqr import (
@@ -18,6 +20,8 @@ from app.schemas.pqr import (
     PQRResponse,
     PQRFilterParams,
     PQRUpdateEstado,
+    PQRStatistics,
+    PQRPublicResponse,
 )
 
 router = APIRouter(
@@ -92,6 +96,48 @@ def buscar_pqr_por_radicado(
         exito=True,
         mensaje="PQR encontrada correctamente.",
         data=pqr,
+    )
+
+
+@router.get(
+    "/buscar-publica",
+    response_model=ApiResponse[PQRPublicResponse],
+    status_code=200,
+    summary="Consultar públicamente una PQR por radicado",
+)
+def buscar_pqr_publica(
+    radicado: str,
+    db: Session = Depends(get_db),
+):
+    pqr = get_pqr_public_by_radicado_service(
+        db,
+        radicado,
+    )
+
+    return ApiResponse(
+        exito=True,
+        mensaje="PQR encontrada correctamente.",
+        data=pqr,
+    )
+
+
+
+@router.get(
+    "/estadisticas",
+    response_model=ApiResponse[PQRStatistics],
+    status_code=200,
+    summary="Consultar estadísticas de PQR",
+)
+def estadisticas_pqrs(
+    db: Session = Depends(get_db),
+    agente=Depends(require_permission("pqr.consultar")),
+):
+    estadisticas = get_pqr_statistics_service(db)
+
+    return ApiResponse(
+        exito=True,
+        mensaje="Estadísticas consultadas correctamente.",
+        data=estadisticas,
     )
 
 

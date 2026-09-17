@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from datetime import datetime
 
 from app.models.pqr import PQR
@@ -20,6 +21,21 @@ def get_pqr_by_id(
     return db.get(PQR, pqr_id)
 
 
+def get_pqr_detail_by_id(
+    db: Session,
+    pqr_id: int,
+) -> PQR | None:
+    return (
+        db.query(PQR)
+        .options(
+            joinedload(PQR.solicitante),
+            joinedload(PQR.agente_asignado),
+        )
+        .filter(PQR.id == pqr_id)
+        .first()
+    )
+
+
 def get_pqr_by_radicado(
     db: Session,
     radicado: str,
@@ -28,6 +44,19 @@ def get_pqr_by_radicado(
         db.query(PQR)
         .filter(PQR.radicado == radicado)
         .first()
+    )
+
+def get_pqr_public_by_radicado( 
+    db: Session, 
+    radicado: str, 
+) -> PQR | None:
+   return ( 
+       db.query(PQR) 
+       .options( 
+           joinedload(PQR.seguimientos) 
+        ) 
+        .filter(PQR.radicado == radicado) 
+        .first() 
     )
 
 
@@ -89,3 +118,55 @@ def assign_pqr_agent(
     db.refresh(pqr)
 
     return pqr
+
+
+def get_pqr_statistics(
+    db: Session,
+) -> dict:
+    total = (
+        db.query(func.count(PQR.id))
+        .scalar()
+    )
+
+    estados = (
+        db.query(
+            PQR.estado,
+            func.count(PQR.id),
+        )
+        .group_by(PQR.estado)
+        .all()
+    )
+
+    tipos = (
+        db.query(
+            PQR.tipo,
+            func.count(PQR.id),
+        )
+        .group_by(PQR.tipo)
+        .all()
+    )
+
+    prioridades = (
+        db.query(
+            PQR.prioridad,
+            func.count(PQR.id),
+        )
+        .group_by(PQR.prioridad)
+        .all()
+    )
+
+    return {
+        "total": total,
+        "por_estado": {
+            estado: cantidad
+            for estado, cantidad in estados
+        },
+        "por_tipo": {
+            tipo: cantidad
+            for tipo, cantidad in tipos
+        },
+        "por_prioridad": {
+            prioridad: cantidad
+            for prioridad, cantidad in prioridades
+        },
+    }

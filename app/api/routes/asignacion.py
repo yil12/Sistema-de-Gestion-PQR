@@ -9,7 +9,7 @@ from app.services.pqr_service import assign_pqr_agent_service
 
 
 router = APIRouter(
-    prefix="/api/pqr/{pqr_id}/asignacion",
+    prefix="/api/pqr/{pqr_id}/asignar",
     tags=["Asignación"],
 )
 

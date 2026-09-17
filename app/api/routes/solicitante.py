@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.api.dependencies.permission import require_permission
+
 from app.core.database import get_db
 from app.schemas.response import ApiResponse
 from app.schemas.solicitante import (
@@ -12,6 +14,7 @@ from app.services.solicitante_service import (
     get_solicitante_by_email_service,
     get_solicitante_by_documento_service,
     register_solicitante,
+    get_solicitante_service
 )
 
 
@@ -107,3 +110,13 @@ def consultar_solicitante(
         mensaje="Solicitante consultado correctamente.",
         data=solicitante,
     )
+
+@router.get(
+    "",
+    response_model=list[SolicitanteResponse],
+)
+def listar_agentes(
+    db: Session = Depends(get_db),
+    agente=Depends(require_permission("usuario.consultar")),
+):
+    return get_solicitante_service(db)

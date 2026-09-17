@@ -13,6 +13,15 @@ def create_solicitante(
 
     return solicitante
 
+def get_solicitante(
+    db: Session,
+) -> list[Solicitante]:
+    return (
+        db.query(Solicitante)
+        .order_by(Solicitante.id.asc())
+        .all()
+    )
+
 
 def get_solicitante_by_id(
     db: Session,

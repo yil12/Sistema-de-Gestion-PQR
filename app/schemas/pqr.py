@@ -64,6 +64,25 @@ class PQRCreate(BaseModel):
 
         return value
 
+class SolicitanteResponse(BaseModel):
+    id: int
+    nombre: str
+    apellido: str
+    tipo_documento: str | None
+    numero_documento: str
+    email: str
+    telefono: str | None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AgenteResponse(BaseModel):
+    id: int
+    nombre: str
+    email: str
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class PQRFilterParams(BaseModel):
     estado: str | None = None
@@ -180,6 +199,10 @@ class PQRResponse(BaseModel):
     radicado: str
     solicitante_id: int
     agente_asignado_id: int | None
+
+    solicitante: SolicitanteResponse
+    agente_asignado: AgenteResponse | None
+
     tipo: TipoPQR
     titulo: str
     descripcion: str
@@ -224,3 +247,34 @@ class PQRResolve(BaseModel):
             )
 
         return value
+
+
+class PQRStatistics(BaseModel):
+    total: int
+    por_estado: dict[str, int]
+    por_tipo: dict[str, int]
+    por_prioridad: dict[str, int]
+
+
+class SeguimientoPublicResponse(BaseModel):
+    id: int
+    tipo_accion: TipoAccionSeguimiento
+    descripcion: str
+    fecha_registro: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PQRPublicResponse(BaseModel):
+    radicado: str
+    tipo: TipoPQR
+    titulo: str
+    descripcion: str
+    categoria: str | None
+    prioridad: PrioridadPQR
+    estado: str
+    created_at: datetime
+    updated_at: datetime | None
+    historial: list[SeguimientoPublicResponse]
+
+    model_config = ConfigDict(from_attributes=True)
