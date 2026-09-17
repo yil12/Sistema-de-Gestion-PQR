@@ -1,0 +1,841 @@
+{
+  "info": {
+    "name": "Sistema PQR API",
+    "description": "Colección completa de endpoints para el Sistema de Gestión de PQR",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pqr_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "radicado",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "solicitante_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agente_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Login exitoso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.access_token);",
+                  "    console.log(\"Token guardado correctamente.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin.pqr@test.com\",\n  \"password\": \"Admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Autenticarse utilizando el usuario administrador creado por el seed. El token JWT se guarda automáticamente en la variable access_token."
+          },
+          "response": []
+        },
+        {
+          "name": "Usuario Actual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Usuario autenticado correctamente\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Obtener información del usuario autenticado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "PQR - CRUD Principal",
+      "item": [
+        {
+          "name": "Crear PQR",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"PQR creada correctamente\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.id) {",
+                  "        pm.collectionVariables.set(\"pqr_id\", jsonData.id);",
+                  "    }",
+                  "    if (jsonData.radicado) {",
+                  "        pm.collectionVariables.set(\"radicado\", jsonData.radicado);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"solicitante\": {\n    \"nombre\": \"María\",\n    \"apellido\": \"Gómez\",\n    \"tipo_documento\": \"CC\",\n    \"numero_documento\": \"9876543210\",\n    \"email\": \"maria.gomez@email.com\",\n    \"telefono\": \"3009876543\"\n  },\n  \"tipo\": \"peticion\",\n  \"titulo\": \"Solicitud de información\",\n  \"descripcion\": \"Necesito información sobre los servicios disponibles.\",\n  \"categoria\": \"Atención al usuario\",\n  \"prioridad\": \"media\",\n  \"canal\": \"web\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pqr",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr"
+              ]
+            },
+            "description": "Registrar una nueva PQR. El ID y radicado de la PQR creada se guardan automáticamente en las variables pqr_id y radicado."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar PQR (con filtros)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr?page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "",
+                  "description": "recibida, en_gestion, resuelta, cerrada"
+                },
+                {
+                  "key": "tipo",
+                  "value": "",
+                  "description": "peticion, queja, reclamo"
+                },
+                {
+                  "key": "prioridad",
+                  "value": "",
+                  "description": "baja, media, alta, urgente"
+                },
+                {
+                  "key": "categoria",
+                  "value": "",
+                  "description": "Categoría de la PQR"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Número de página"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Registros por página. Máximo 100."
+                }
+              ]
+            },
+            "description": "Listar PQR con filtros opcionales. Requiere autenticación."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar PQR por Radicado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr/buscar?radicado={{radicado}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "buscar"
+              ],
+              "query": [
+                {
+                  "key": "radicado",
+                  "value": "{{radicado}}",
+                  "description": "Radicado generado automáticamente al crear una PQR."
+                }
+              ]
+            },
+            "description": "Buscar una PQR utilizando el radicado almacenado en la variable radicado."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar PQR Pública por Radicado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/pqr/buscar-publica?radicado={{radicado}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "buscar-publica"
+              ],
+              "query": [
+                {
+                  "key": "radicado",
+                  "value": "{{radicado}}",
+                  "description": "Radicado de la PQR."
+                }
+              ]
+            },
+            "description": "Consulta pública de una PQR mediante su número de radicado."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener PQR por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{pqr_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{pqr_id}}"
+              ]
+            },
+            "description": "Obtener el detalle de la PQR utilizando el ID guardado automáticamente."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Estado de PQR",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"en_gestion\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{pqr_id}}/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{pqr_id}}",
+                "estado"
+              ]
+            },
+            "description": "Cambiar el estado de la PQR. Estados válidos: recibida, en_gestion, resuelta, cerrada."
+          },
+          "response": []
+        },
+        {
+          "name": "Estadísticas de PQR",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr/estadisticas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "estadisticas"
+              ]
+            },
+            "description": "Obtener estadísticas de PQR por estado, tipo y prioridad."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Seguimiento",
+      "item": [
+        {
+          "name": "Registrar Seguimiento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo_accion\": \"comentario\",\n  \"descripcion\": \"Se revisó la documentación del solicitante\",\n  \"agente_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{pqr_id}}/seguimiento",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{pqr_id}}",
+                "seguimiento"
+              ]
+            },
+            "description": "Agregar un seguimiento a la PQR. Tipos: creada, comentario, respuesta, escalamiento, cambio_estado, asignacion, reasignacion."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Seguimientos de PQR",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{pqr_id}}/seguimiento",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{pqr_id}}",
+                "seguimiento"
+              ]
+            },
+            "description": "Obtener el historial de seguimientos asociados a la PQR."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Asignación",
+      "item": [
+        {
+          "name": "Asignar Agente a PQR",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agente_id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{pqr_id}}/asignar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{pqr_id}}",
+                "asignar"
+              ]
+            },
+            "description": "Asignar o reasignar un agente a una PQR. Requiere permisos de asignación."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Escalamiento",
+      "item": [
+        {
+          "name": "Escalar PQR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destino\": \"Supervisor Legal\",\n  \"descripcion\": \"Caso requiere revisión legal por complejidad\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{pqr_id}}/escalar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{pqr_id}}",
+                "escalar"
+              ]
+            },
+            "description": "Escalar una PQR a otra área o nivel y registrar el escalamiento en el historial."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Respuesta",
+      "item": [
+        {
+          "name": "Resolver PQR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"respuesta\": \"Se ha revisado su solicitud y se procede a dar respuesta. El trámite se completará en 5 días hábiles.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pqr/{{pqr_id}}/respuesta",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "pqr",
+                "{{pqr_id}}",
+                "respuesta"
+              ]
+            },
+            "description": "Resolver una PQR con respuesta formal. Cambia el estado a resuelta y registra la acción en el historial."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Solicitantes",
+      "item": [
+        {
+          "name": "Listar Solicitantes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitantes"
+              ]
+            },
+            "description": "Listar todos los solicitantes registrados."
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar Solicitante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.id) {",
+                  "        pm.collectionVariables.set(\"solicitante_id\", jsonData.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos\",\n  \"apellido\": \"Martínez\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1122334455\",\n  \"email\": \"carlos.martinez@email.com\",\n  \"telefono\": \"3001122334\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/solicitantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitantes"
+              ]
+            },
+            "description": "Registrar un nuevo solicitante."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Solicitante por Email",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitantes/email/juan.perez@test.com",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitantes",
+                "email",
+                "juan.perez@test.com"
+              ]
+            },
+            "description": "Buscar el solicitante creado por el seed mediante su correo electrónico."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Solicitante por Documento",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitantes/documento/1000000001",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitantes",
+                "documento",
+                "1000000001"
+              ]
+            },
+            "description": "Buscar el solicitante creado por el seed mediante su número de documento."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Solicitante por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitantes/{{solicitante_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "solicitantes",
+                "{{solicitante_id}}"
+              ]
+            },
+            "description": "Obtener el detalle del solicitante mediante el ID almacenado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Agentes",
+      "item": [
+        {
+          "name": "Listar Agentes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/agentes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agentes"
+              ]
+            },
+            "description": "Listar todos los agentes internos."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Agente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos Agente\",\n  \"email\": \"carlos.agente@test.com\",\n  \"rol_id\": 1,\n  \"password\": \"Agente123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/agentes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agentes"
+              ]
+            },
+            "description": "Crear un nuevo agente interno. Requiere permisos de administrador."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Agente por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/agentes/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "agentes",
+                "1"
+              ]
+            },
+            "description": "Obtener detalle de un agente por su ID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Verificar Disponibilidad API",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"API disponible\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Endpoint de health check para verificar que la API está operativa."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
