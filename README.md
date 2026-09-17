@@ -8,7 +8,7 @@ El proyecto está desarrollado con **FastAPI**, **SQLAlchemy**, **Alembic** y **
 
 ---
 
-##  Tabla de contenidos
+## Tabla de contenidos
 
 * [Descripción](#-descripción)
 * [Arquitectura](#-arquitectura)
@@ -20,9 +20,8 @@ El proyecto está desarrollado con **FastAPI**, **SQLAlchemy**, **Alembic** y **
 * [Ejecución sin Docker](#-ejecución-sin-docker)
 * [Documentación de la API](#-documentación-de-la-api)
 * [Endpoints principales](#-endpoints-principales)
-* [Estructura del proyecto](#-estructura-del-proyecto)
 * [Flujo de estados de una PQR](#-flujo-de-estados-de-una-pqr)
-* [Pruebas](#-pruebas)
+* [Estructura del proyecto](#-estructura-del-proyecto)
 * [Decisiones de arquitectura](#-decisiones-de-arquitectura)
 * [Gestión del proyecto](#-gestión-del-proyecto)
 * [Declaración de uso de IA](#-declaración-de-uso-de-ia)
@@ -30,7 +29,7 @@ El proyecto está desarrollado con **FastAPI**, **SQLAlchemy**, **Alembic** y **
 
 ---
 
-##  Descripción
+## Descripción
 
 El backend proporciona los servicios necesarios para gestionar el ciclo de vida de una PQR:
 
@@ -51,7 +50,7 @@ El sistema está diseñado con separación de responsabilidades para facilitar e
 
 ---
 
-##  Arquitectura
+## Arquitectura
 
 El backend utiliza una arquitectura por capas:
 
@@ -79,11 +78,11 @@ El backend utiliza una arquitectura por capas:
 └──────────────────────────────┘
 ```
 
-Esta separación permite mantener desacopladas las responsabilidades relacionadas con HTTP, lógica de negocio y persistencia.
+Esta separación permite mantener diferenciadas las responsabilidades relacionadas con HTTP, validación, lógica de negocio y persistencia.
 
 ---
 
-##  Stack tecnológico
+## Stack tecnológico
 
 | Componente         | Tecnología        |
 | ------------------ | ----------------- |
@@ -99,7 +98,7 @@ Esta separación permite mantener desacopladas las responsabilidades relacionada
 
 ---
 
-##  Requisitos
+## Requisitos
 
 ### Con Docker
 
@@ -162,7 +161,48 @@ API         → localhost:8000
 PostgreSQL  → localhost:5432
 ```
 
-### 4. Verificar la API
+### 4. Ejecutar las migraciones
+
+Con los servicios levantados:
+
+```bash
+docker compose exec api alembic upgrade head
+```
+
+Esto crea o actualiza las tablas de la base de datos de acuerdo con las migraciones disponibles.
+
+### 5. Cargar datos de prueba
+
+El proyecto incluye un **seed** para facilitar la evaluación y permitir probar la aplicación con información inicial.
+
+Ejecutar:
+
+```bash
+docker compose exec api python -m app.seed
+```
+
+El seed crea datos de prueba para:
+
+* Un administrador.
+* Un supervisor.
+* Un agente operativo.
+* Un solicitante.
+* Una PQR de prueba.
+* Un seguimiento inicial asociado a la PQR.
+
+Los roles y permisos son creados previamente mediante las migraciones de Alembic.
+
+### Credenciales de prueba
+
+| Rol           | Email                     | Contraseña |
+| ------------- | ------------------------- | ---------- |
+| Administrador | `admin.pqr@test.com`      | `Admin123` |
+| Supervisor    | `supervisor.pqr@test.com` | `Admin123` |
+| Agente        | `agente.pqr@test.com`     | `Admin123` |
+
+> El seed puede ejecutarse nuevamente sin generar duplicados de los datos principales de prueba.
+
+### 6. Verificar la API
 
 Una vez iniciados los contenedores, acceder a:
 
@@ -174,7 +214,7 @@ La interfaz de Swagger permite consultar y probar los endpoints disponibles.
 
 ---
 
-#  Configuración de variables de entorno
+# Configuración de variables de entorno
 
 El proyecto utiliza variables de entorno para configurar la conexión a PostgreSQL y otros parámetros de la aplicación.
 
@@ -203,8 +243,6 @@ La persistencia se implementa mediante **SQLAlchemy 2.0** y las modificaciones d
 
 ## Ejecutar migraciones
 
-Después de levantar el contenedor de la API, ejecutar:
-
 ```bash
 docker compose exec api alembic upgrade head
 ```
@@ -219,7 +257,7 @@ Cuando se modifican los modelos:
 docker compose exec api alembic revision --autogenerate -m "descripcion del cambio"
 ```
 
-Después revisar la migración generada y aplicarla:
+Después de revisar la migración generada:
 
 ```bash
 docker compose exec api alembic upgrade head
@@ -233,20 +271,20 @@ docker compose exec api alembic current
 
 ---
 
-#  Ejecución sin Docker
+# Ejecución sin Docker
 
-Docker es el método recomendado, pero el proyecto puede ejecutarse localmente instalando las dependencias.
+Docker es el método recomendado, pero el proyecto también puede ejecutarse localmente instalando las dependencias.
 
 ### 1. Crear entorno virtual
 
-Windows:
+#### Windows
 
 ```bash
 python -m venv venv
 venv\Scripts\activate
 ```
 
-Linux/macOS:
+#### Linux/macOS
 
 ```bash
 python3 -m venv venv
@@ -277,7 +315,13 @@ La base de datos PostgreSQL debe estar disponible localmente.
 alembic upgrade head
 ```
 
-### 5. Iniciar la API
+### 5. Cargar datos de prueba
+
+```bash
+python -m app.seed
+```
+
+### 6. Iniciar la API
 
 ```bash
 uvicorn app.main:app --reload
@@ -291,7 +335,7 @@ http://localhost:8000
 
 ---
 
-#  Documentación de la API
+# Documentación de la API
 
 FastAPI genera automáticamente la documentación basada en OpenAPI.
 
@@ -300,6 +344,8 @@ FastAPI genera automáticamente la documentación basada en OpenAPI.
 ```text
 http://localhost:8000/docs
 ```
+
+---
 
 # 🔌 Endpoints principales
 
@@ -336,17 +382,23 @@ categoria
 GET /api/pqr/{id}
 ```
 
+Permite consultar la información detallada de una PQR.
+
 ### Actualizar estado
 
 ```http
 PATCH /api/pqr/{id}/estado
 ```
 
+Permite actualizar el estado de una PQR dentro de su ciclo de gestión.
+
 ### Buscar por radicado
 
 ```http
 GET /api/pqr/buscar?radicado={radicado}
 ```
+
+Permite localizar una PQR mediante su número de radicado.
 
 ---
 
@@ -358,15 +410,19 @@ GET /api/pqr/buscar?radicado={radicado}
 POST /api/pqr/{id}/seguimiento
 ```
 
+Permite registrar una actuación o actualización relacionada con una PQR.
+
 ### Consultar seguimientos
 
 ```http
 GET /api/pqr/{id}/seguimiento
 ```
 
+Permite consultar el historial de seguimientos asociados a una PQR.
+
 ---
 
-#  Flujo de estados de una PQR
+# Flujo de estados de una PQR
 
 El ciclo principal de una PQR contempla:
 
@@ -395,7 +451,7 @@ El historial de seguimiento permite registrar las actuaciones realizadas durante
 
 ---
 
-# 📁 Estructura del proyecto
+# Estructura del proyecto
 
 ```text
 Sistema-de-Gestion-PQR/
@@ -412,11 +468,14 @@ Sistema-de-Gestion-PQR/
 │   │
 │   ├── models/
 │   │   ├── agente.py
+│   │   ├── permiso.py
 │   │   ├── pqr.py
 │   │   ├── rol.py
+│   │   ├── rol_permiso.py
 │   │   ├── seguimiento.py
 │   │   └── solicitante.py
 │   │
+│   ├── seed.py
 │   └── main.py
 │
 ├── test/
@@ -430,12 +489,9 @@ Sistema-de-Gestion-PQR/
 └── README.md
 ```
 
-> La estructura puede ampliarse a medida que se incorporen nuevos módulos de la aplicación.
-
 ---
 
-
-#  Decisiones de arquitectura
+# Decisiones de arquitectura
 
 ### FastAPI
 
@@ -443,16 +499,16 @@ Se seleccionó FastAPI por su soporte para:
 
 * APIs REST.
 * Validación mediante Pydantic.
-* Documentación automática OpenAPI.
+* Documentación automática basada en OpenAPI.
 * Integración con Python moderno.
-* Desarrollo rápido de servicios backend.
+* Desarrollo de servicios backend de forma eficiente.
 
 ### PostgreSQL
 
 Se seleccionó PostgreSQL como motor relacional por:
 
 * Integridad referencial.
-* Soporte para relaciones complejas.
+* Soporte para relaciones entre entidades.
 * Robustez.
 * Compatibilidad con SQLAlchemy.
 * Adecuación para un sistema transaccional como la gestión de PQR.
@@ -484,7 +540,7 @@ El trabajo se organizó mediante:
 * Registro de trabajo.
 * Seguimiento del progreso.
 
-El desarrollo se realizó de forma incremental, priorizando primero el análisis y diseño, seguido de la implementación del backend, persistencia y frontend.
+El desarrollo se realizó de forma incremental, comenzando con el análisis y diseño, seguido de la implementación del backend, persistencia y frontend.
 
 ---
 
@@ -500,7 +556,7 @@ La IA fue utilizada principalmente para:
 * Identificar posibles errores.
 * Apoyar la generación y mejora de documentación.
 * Proponer estructuras iniciales de código.
-* Resolver dudas relacionadas con FastAPI, SQLAlchemy, Alembic, Docker y React.
+* Resolver dudas relacionadas con FastAPI, SQLAlchemy, Alembic y Docker.
 
 El código generado o sugerido mediante IA fue revisado, adaptado y validado durante el desarrollo del proyecto.
 
