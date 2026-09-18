@@ -4,13 +4,14 @@ API REST para la gestión de Peticiones, Quejas y Reclamos (PQR) de la Fundació
 
 El backend permite registrar, consultar y gestionar PQR, realizar seguimiento a las solicitudes y mantener la trazabilidad de su ciclo de vida.
 
-El proyecto está desarrollado con **FastAPI**, **SQLAlchemy**, **Alembic** y **PostgreSQL**, utilizando Docker para facilitar la configuración del entorno de desarrollo.
+El proyecto está desarrollado con **FastAPI**, **SQLAlchemy**, **Alembic** y **PostgreSQL**, utilizando Docker para facilitar la configuración del entorno de desarrollo y despliegue.
 
 ---
 
 ## Tabla de contenidos
 
 * [Descripción](#-descripción)
+* [Aplicación desplegada](#-aplicación-desplegada)
 * [Arquitectura](#-arquitectura)
 * [Stack tecnológico](#-stack-tecnológico)
 * [Requisitos](#-requisitos)
@@ -24,6 +25,7 @@ El proyecto está desarrollado con **FastAPI**, **SQLAlchemy**, **Alembic** y **
 * [Estructura del proyecto](#-estructura-del-proyecto)
 * [Decisiones de arquitectura](#-decisiones-de-arquitectura)
 * [Gestión del proyecto](#-gestión-del-proyecto)
+* [Despliegue](#-despliegue)
 * [Declaración de uso de IA](#-declaración-de-uso-de-ia)
 * [Autor](#-autor)
 
@@ -42,11 +44,46 @@ El backend proporciona los servicios necesarios para gestionar el ciclo de vida 
 * Registro de seguimientos.
 * Consulta del historial de seguimientos.
 * Gestión de solicitantes.
-* Asignación de agentes internos.
+* Gestión de agentes internos.
+* Asignación y escalamiento de PQR.
+* Registro de respuestas y resoluciones.
 * Persistencia de la información en PostgreSQL.
 * Control de cambios del esquema mediante migraciones de Alembic.
+* Autenticación mediante JWT y control de acceso basado en roles.
 
 El sistema está diseñado con separación de responsabilidades para facilitar el mantenimiento y evolución del código.
+
+---
+
+# Aplicación desplegada
+
+La aplicación se encuentra desplegada en Render para facilitar la evaluación del sistema.
+
+### Frontend
+
+```text
+https://sistema-de-gestion-pqr-front-1.onrender.com
+```
+
+### Backend
+
+```text
+https://sistema-de-gestion-pqr-1.onrender.com
+```
+
+### Documentación Swagger
+
+```text
+https://sistema-de-gestion-pqr-1.onrender.com/docs
+```
+
+### Health Check
+
+```text
+https://sistema-de-gestion-pqr-1.onrender.com/health
+```
+
+El frontend consume la API del backend mediante la variable de entorno `VITE_API_URL`.
 
 ---
 
@@ -95,6 +132,9 @@ Esta separación permite mantener diferenciadas las responsabilidades relacionad
 | Contenedores       | Docker            |
 | Orquestación local | Docker Compose    |
 | Documentación API  | OpenAPI / Swagger |
+| Autenticación      | JWT               |
+| Frontend           | React + Vite      |
+| Despliegue         | Render            |
 
 ---
 
@@ -161,27 +201,33 @@ API         → localhost:8000
 PostgreSQL  → localhost:5432
 ```
 
-### 4. Ejecutar las migraciones
+Durante el inicio del contenedor de la API se ejecutan automáticamente:
 
-Con los servicios levantados:
-
-```bash
-docker compose exec api alembic upgrade head
+```text
+1. Alembic → aplica las migraciones pendientes.
+2. Seed    → carga los datos iniciales de prueba.
+3. Uvicorn → inicia la API.
 ```
 
-Esto crea o actualiza las tablas de la base de datos de acuerdo con las migraciones disponibles.
+Por lo tanto, para una ejecución estándar no es necesario ejecutar manualmente las migraciones ni el seed después de levantar los contenedores.
 
-### 5. Cargar datos de prueba
+### 4. Verificar la API
 
-El proyecto incluye un **seed** para facilitar la evaluación y permitir probar la aplicación con información inicial.
+Una vez iniciados los contenedores, acceder a:
 
-Ejecutar:
-
-```bash
-docker compose exec api python -m app.seed
+```text
+http://localhost:8000/docs
 ```
 
-El seed crea datos de prueba para:
+La interfaz de Swagger permite consultar y probar los endpoints disponibles.
+
+---
+
+## Datos de prueba
+
+El proyecto incluye un **seed idempotente** para facilitar la evaluación y permitir probar la aplicación con información inicial.
+
+El seed crea o verifica:
 
 * Un administrador.
 * Un supervisor.
@@ -200,17 +246,15 @@ Los roles y permisos son creados previamente mediante las migraciones de Alembic
 | Supervisor    | `supervisor.pqr@test.com` | `Admin123` |
 | Agente        | `agente.pqr@test.com`     | `Admin123` |
 
+> Estas credenciales corresponden exclusivamente a datos de prueba incluidos para facilitar la evaluación del sistema.
+
 > El seed puede ejecutarse nuevamente sin generar duplicados de los datos principales de prueba.
 
-### 6. Verificar la API
+Si se desea ejecutar manualmente:
 
-Una vez iniciados los contenedores, acceder a:
-
-```text
-http://localhost:8000/docs
+```bash
+docker compose exec api python -m app.seed
 ```
-
-La interfaz de Swagger permite consultar y probar los endpoints disponibles.
 
 ---
 
@@ -224,7 +268,11 @@ Ejemplo:
 POSTGRES_DB=pqr_db
 POSTGRES_USER=pqr_user
 POSTGRES_PASSWORD=your_password
-DATABASE_URL=postgresql://pqr_user:your_password@db:5432/pqr_db
+DATABASE_URL=postgresql+psycopg://pqr_user:your_password@db:5432/pqr_db
+
+SECRET_KEY=your_secret_key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
 > Los valores utilizados en producción no deben almacenarse directamente en el repositorio.
@@ -248,6 +296,8 @@ docker compose exec api alembic upgrade head
 ```
 
 Esto aplica las migraciones disponibles sobre la base de datos.
+
+> Al utilizar el flujo estándar de Docker del proyecto, las migraciones se ejecutan automáticamente durante el inicio del contenedor de la API.
 
 ## Crear una nueva migración
 
@@ -341,13 +391,55 @@ FastAPI genera automáticamente la documentación basada en OpenAPI.
 
 ### Swagger UI
 
+Local:
+
 ```text
 http://localhost:8000/docs
+```
+
+Producción:
+
+```text
+https://sistema-de-gestion-pqr-1.onrender.com/docs
+```
+
+### ReDoc
+
+Local:
+
+```text
+http://localhost:8000/redoc
+```
+
+Producción:
+
+```text
+https://sistema-de-gestion-pqr-1.onrender.com/redoc
 ```
 
 ---
 
 # 🔌 Endpoints principales
+
+## Autenticación
+
+### Iniciar sesión
+
+```http
+POST /api/auth/login
+```
+
+Permite autenticar usuarios y obtener un token JWT.
+
+### Consultar usuario autenticado
+
+```http
+GET /api/auth/me
+```
+
+Permite consultar la información del usuario autenticado.
+
+---
 
 ## PQR
 
@@ -400,6 +492,22 @@ GET /api/pqr/buscar?radicado={radicado}
 
 Permite localizar una PQR mediante su número de radicado.
 
+### Búsqueda pública por radicado
+
+```http
+GET /api/pqr/buscar-publica?radicado={radicado}
+```
+
+Permite consultar públicamente el estado y la información disponible de una PQR mediante su número de radicado.
+
+### Estadísticas
+
+```http
+GET /api/pqr/estadisticas
+```
+
+Permite consultar información estadística relacionada con las PQR.
+
 ---
 
 ## Seguimiento
@@ -419,6 +527,29 @@ GET /api/pqr/{id}/seguimiento
 ```
 
 Permite consultar el historial de seguimientos asociados a una PQR.
+
+---
+
+## Asignación
+
+El sistema dispone de endpoints para:
+
+* Consultar agentes.
+* Asignar PQR.
+* Reasignar PQR.
+* Gestionar la asignación de solicitudes a agentes internos.
+
+---
+
+## Escalamiento
+
+El sistema permite gestionar el escalamiento de PQR cuando una solicitud requiere intervención de un nivel superior.
+
+---
+
+## Resolución
+
+El sistema dispone de funcionalidades para registrar y gestionar respuestas y resoluciones asociadas a las PQR.
 
 ---
 
@@ -462,6 +593,9 @@ Sistema-de-Gestion-PQR/
 │   └── script.py.mako
 │
 ├── app/
+│   ├── api/
+│   │   └── routes/
+│   │
 │   ├── core/
 │   │   ├── config.py
 │   │   └── database.py
@@ -525,6 +659,14 @@ Permite versionar los cambios realizados sobre el esquema de la base de datos y 
 
 Docker permite estandarizar el entorno de ejecución y reducir diferencias entre la máquina de desarrollo y otros entornos.
 
+### JWT
+
+Se utiliza autenticación basada en tokens JWT para proteger los endpoints internos y permitir diferenciar los permisos de acuerdo con el rol del usuario autenticado.
+
+### Arquitectura por capas
+
+La separación entre rutas, validación/lógica de negocio y persistencia permite reducir el acoplamiento entre componentes y facilita el mantenimiento del sistema.
+
 ---
 
 # Gestión del proyecto
@@ -540,7 +682,69 @@ El trabajo se organizó mediante:
 * Registro de trabajo.
 * Seguimiento del progreso.
 
-El desarrollo se realizó de forma incremental, comenzando con el análisis y diseño, seguido de la implementación del backend, persistencia y frontend.
+El desarrollo se realizó de forma incremental, comenzando con el análisis y diseño, seguido de la implementación del backend, persistencia, autenticación y frontend.
+
+---
+
+# Despliegue
+
+El backend y frontend fueron desplegados en **Render**.
+
+### Backend
+
+```text
+https://sistema-de-gestion-pqr-1.onrender.com
+```
+
+### Frontend
+
+```text
+https://sistema-de-gestion-pqr-front-1.onrender.com
+```
+
+### Backend
+
+El backend utiliza un contenedor Docker.
+
+Durante el inicio del servicio se ejecutan:
+
+```text
+alembic upgrade head
+python -m app.seed
+uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+```
+
+Esto permite que el entorno desplegado pueda crear/actualizar el esquema y disponer de datos iniciales de prueba.
+
+### Frontend
+
+El frontend está desarrollado con React + Vite y se genera mediante:
+
+```bash
+npm install
+npm run build
+```
+
+El resultado del build corresponde a la carpeta:
+
+```text
+dist/
+```
+
+La variable de entorno utilizada para conectar el frontend con el backend es:
+
+```env
+VITE_API_URL=https://sistema-de-gestion-pqr-1.onrender.com
+```
+
+### CORS
+
+El backend permite solicitudes desde el frontend local y desde el frontend desplegado:
+
+```text
+http://localhost:5173
+https://sistema-de-gestion-pqr-front-1.onrender.com
+```
 
 ---
 
@@ -556,11 +760,27 @@ La IA fue utilizada principalmente para:
 * Identificar posibles errores.
 * Apoyar la generación y mejora de documentación.
 * Proponer estructuras iniciales de código.
-* Resolver dudas relacionadas con FastAPI, SQLAlchemy, Alembic y Docker.
+* Resolver dudas relacionadas con FastAPI, SQLAlchemy, Alembic, Docker, React y despliegue.
 
 El código generado o sugerido mediante IA fue revisado, adaptado y validado durante el desarrollo del proyecto.
 
 La responsabilidad sobre las decisiones técnicas, integración y funcionamiento final del sistema corresponde al desarrollador.
+
+---
+
+# Repositorios
+
+### Backend
+
+```text
+https://github.com/yil12/Sistema-de-Gestion-PQR
+```
+
+### Frontend
+
+```text
+https://github.com/yil12/Sistema-de-gestion-PQR-Front
+```
 
 ---
 
@@ -570,15 +790,3 @@ La responsabilidad sobre las decisiones técnicas, integración y funcionamiento
 
 Ingeniero de Sistemas
 Cartagena, Colombia
-
----
-
-## 🔗 Repositorio
-
-Backend:
-
-```text
-https://github.com/yil12/Sistema-de-Gestion-PQR
-```
-
-El frontend del sistema se encuentra desarrollado en un repositorio independiente.
